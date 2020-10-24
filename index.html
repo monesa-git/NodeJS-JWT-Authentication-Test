@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"
+        integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg=="
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <h1 class="row">Login</h1>
+
+        <main>
+            <div class="row">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username"></input>
+            </div>
+
+            <div class="row">
+                <label for="password">password</label>
+                <input type="password" name="password" id="password">
+            </div>
+
+            <div>
+                <button onclick="login()">Login</button>
+                <button onclick="getDashboard()">Get DashBoard</button>
+                <button onclick="getSettings()">Settings</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+
+        const state = {'history':10}
+        const title = 'Home Page'
+        const url = '/homepage'
+
+        history.pushState(state, title, url)
+
+
+        function login() {
+            const data = {
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value
+            };
+
+            axios.post('http://localhost:3000/api/login', data)
+            .then(function (res) {
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                if (res && res.data && res.data.success) {
+                    token = res.data.token;
+                    localStorage.setItem('jwt', token);
+                    getDashboard();
+                }else if(!res.data.success){
+                    alert(res.data.myContent);
+                    window.location = "./";
+                }
+                console.log(res);
+            }).catch(function(err){
+                alert("please check your credentials and login again");
+            });
+        }
+
+        function getDashboard() {
+            const token = localStorage.getItem('jwt');
+            axios.get('http://localhost:3000/api/dashboard', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(function (res) {
+                // console.log(res);
+                console.log(res.data);
+                if (res && res.data && res.data.success) {
+
+                    const state = {'history':20}
+                    const title = 'Dashboard Page'
+                    const url = '/dashboard'
+
+                    history.pushState(state, title, url)
+
+                    document.querySelector('h1.row').innerHTML = 'Dashboard';
+                    document.querySelector('main').innerHTML = res.data.myContent;
+                    var btn = document.createElement("Button");   // Create a <button> element
+                    btn.innerHTML = "Settings";
+                    btn.setAttribute('onclick','getSettings();');    
+                    document.querySelector('main').appendChild(btn);
+                    
+                    // document.querySelector('main').innerHTML = <button>M</button>;
+                }else if(!res.data.success){
+                    alert(res.data.myContent);
+                    window.location = "./";
+                }
+            });
+        } 
+
+        function getSettings() {
+            const token = localStorage.getItem('jwt');
+            axios.get('http://localhost:3000/api/settings', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(function (res) {
+                console.log(res);
+                if (res && res.data && res.data.success) {
+
+                    const state = {'history':30}
+                    const title = 'Settings Page'
+                    const url = '/settings'
+
+                    history.pushState(state, title, url)
+
+                    document.querySelector('h1.row').innerHTML = 'Settings';
+                    document.querySelector('main').innerHTML = res.data.myContent;
+
+                    var btn = document.createElement("Button");   // Create a <button> element
+                    btn.innerHTML = "Get DashBoard";
+                    btn.setAttribute('onclick','getDashboard();');    
+                    document.querySelector('main').appendChild(btn);
+
+                }else if(!res.data.success){
+                    alert(res.data.myContent);
+                    window.location = "./";
+                }
+            });
+        } 
+
+        // function onLoad(){
+        //     const token = localStorage.getItem('jwt');
+        //     if(token){
+        //         getDashboard();
+        //     }
+        // }
+        // onLoad();
+    </script>
+
+</body>
+
+</html>
